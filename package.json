@@ -1,11 +1,12 @@
 {
   "name": "trackable-request-handler",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simplifies making trackable and offline requests for React/Redux apps",
   "main": "lib/index.js",
   "scripts": {
     "test": "jest",
     "prepublishOnly": "npm run build",
+    "postpublishOnly": "rm -rf lib",
     "build": "babel src/ --out-dir lib/"
   },
   "repository": {

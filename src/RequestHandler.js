@@ -25,9 +25,9 @@ class RequestHandler {
   ) {
     this.apis = apis;
     this.record = (api) => ({
-      request: () => actions.recordRequest(api.path, api.method),
-      success: () => actions.recordSuccess(api.path, api.method),
-      failure: () => actions.recordFailure(api.path, api.method)
+      request: () => actions.recordRequest(api.path()),
+      success: () => actions.recordSuccess(api.path()),
+      failure: () => actions.recordFailure(api.path())
     });
 
     this.requestHistoryStateKey = requestHistoryStateKey;
