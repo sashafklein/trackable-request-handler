@@ -28,7 +28,7 @@ The module expects an APIs object where each key points to a function which take
 
 An example APIs file:
 
-```
+```js
 const updateUser = (id, updates) => ({
   path: () => ({ method: 'PUT', path: `/users/${id}`, body: updates }),
   offlineResponse: (getState) => ({
@@ -54,7 +54,7 @@ In the above example, the `offlineResponse` method returns the ideal API respons
 
 The module allows you to define precisely how you track requests, but it also provides a simple default, the `requestsReducer` export. Add this to your reducers to get going:
 
-```
+```js
 export const store = combineReducers({
   requests: requestsReducer,
   // Etc
@@ -69,7 +69,7 @@ Here's a simple example configuration, using `aws-amplify` as the underlying req
 
 > Note. The requestFunction you supply must have a basic fetch-like signature, taking a single `options` object argument, from which it constructs the request. And it must return the request Promise.
 
-```
+```js
 import RequestHandler from 'trackable-request-handler';
 import { API } from 'aws-amplify';
 
@@ -127,7 +127,7 @@ Once you've defined your handler and exported the `req` and `reqOnce` functions,
 
 Here's a basic example, using the above `updateUser` API, in a component:
 
-```
+```js
 import { req } from 'utils/request';
 /...
   updateUser () {
@@ -161,7 +161,7 @@ The `RequestHandler` takes a number of configuration arguments, which all (other
 
 The tool can be used with multiple APIs, by defining a handler for each:
 
-```
+```js
 const awsHandler = new RequestHandler(APIs, awsRequest, REACT_APP_OFFLINE);
 const normalHandler = new RequestHandler(APIs, fetch, REACT_APP_OFFLINE);
 
