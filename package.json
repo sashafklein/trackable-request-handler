@@ -1,0 +1,39 @@
+{
+  "name": "trackable-request-handler",
+  "version": "1.0.0",
+  "description": "Simplifies making trackable and offline requests for React/Redux apps",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "prepublishOnly": "npm run build",
+    "build": "babel src/ --out-dir lib/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sashafklein/trackable-request-handler.git"
+  },
+  "keywords": [
+    "request",
+    "fetch",
+    "offline",
+    "trackable",
+    "react",
+    "redux"
+  ],
+  "author": "Sasha Klein",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sashafklein/trackable-request-handler/issues"
+  },
+  "homepage": "https://github.com/sashafklein/trackable-request-handler#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "jest": "^23.5.0"
+  },
+  "dependencies": {
+    "immutable": "^3.8.2",
+    "whatwg-fetch": "^2.0.4"
+  }
+}
