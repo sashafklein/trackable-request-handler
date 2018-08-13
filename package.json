@@ -1,6 +1,6 @@
 {
   "name": "trackable-request-handler",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Simplifies making trackable and offline requests for React/Redux apps",
   "main": "lib/index.js",
   "scripts": {
