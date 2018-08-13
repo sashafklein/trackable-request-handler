@@ -24,10 +24,10 @@ class RequestHandler {
     finders = {}
   ) {
     this.apis = apis;
-    this.record = (api) => ({
-      request: () => actions.recordRequest(api.path()),
-      success: () => actions.recordSuccess(api.path()),
-      failure: () => actions.recordFailure(api.path())
+    this.record = (path) => ({
+      request: () => actions.recordRequest(path.path, path.method),
+      success: () => actions.recordSuccess(path.path, path.method),
+      failure: () => actions.recordFailure(path.path, path.method)
     });
 
     this.requestHistoryStateKey = requestHistoryStateKey;
@@ -88,8 +88,9 @@ class RequestHandler {
   }
 
   _handleRequest (api, dispatch, getState) {
-    const record = this.record(api);
     const pathObj = api.path();
+    const record = this.record(pathObj);
+
     const makeRequest = this.offline
       ? () =>
         new Promise(resolve => {
