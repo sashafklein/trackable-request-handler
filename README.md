@@ -22,9 +22,10 @@ yarn add trackable-request-handler
 
 The module expects an APIs object where each key points to a function which takes request arguments and returns an object with 3 methods:
 
-1. `path` -- Returns the path information associated with the request.
-2. `offlineResponse` -- Given a Redux `getState` arg, responds with how a successful response should look, given the args. (When offline, this stubs the request and returns the function results.)
-3. `onSuccess` -- Given two args (`response`, and Redux `dispatch`), called on a successful API hit.
+1. `path` (**required**) -- Returns the path information associated with the request.
+2. `offlineResponse` (**required**) -- Given a Redux `getState` arg, responds with how a successful response should look, given the args. (When offline, this stubs the request and returns the function results.)
+3. `onSuccess` (optional) -- Given two args (`response`, and Redux `dispatch`), called on a successful API hit.
+4. `onFailure` (optional) -- Given two args (`error` and Redux `dispatch`), called on API failure.
 
 An example APIs file:
 
@@ -40,6 +41,7 @@ const updateUser = (id, updates) => ({
     console.log('Data', response);
     dispatch(receiveUser(id, response));
   }
+  // No onFailure defined for this method.
 });
 
 // ...
@@ -135,11 +137,16 @@ import { req } from 'utils/request';
     const { userAttrs } = this.state;
 
     dispatch(req('updateUser', userAttrs))
-      .then(() => { // Called after above-defined onSuccess
-        this.setState({ editable: false });
+      .then((response) => { // Called after above-defined onSuccess
+        this.setState({ editable: false, value: response });
       })
+      .catch((error) => {
+        console.log('Hit Error:', error);
+      });
   }
 ```
+
+> Note that this tool allows for both `onSuccess` and `onFailure` to be defined on the API object, **and** for the dispatch to be treated as a basic promise, with `then` and `catch` functions, fed the `response` and `error`. You can use both, either, or neither.
 
 ###### reqOnce
 

@@ -107,17 +107,26 @@ class RequestHandler {
       : this.request;
 
     dispatch(record.request());
-    return makeRequest(pathObj)
-      .then(response => {
-        dispatch(record.success());
-        api.onSuccess && api.onSuccess(response, dispatch);
-        return response;
-      })
-      .catch(err => {
-        dispatch(record.failure());
-        // eslint-disable-next-line
-        console.error(err);
-      });
+    return new Promise((resolve, reject) => {
+      makeRequest(pathObj)
+        .then(response => {
+          dispatch(record.success());
+          api.onSuccess && api.onSuccess(response, dispatch);
+          resolve(response);
+        })
+        .catch(err => {
+          dispatch(record.failure());
+
+          if (api.onFailure) {
+            api.onFailure(err, dispatch);
+          } else {
+            // eslint-disable-next-line
+            console.error(err);
+          }
+
+          reject(err);
+        });
+    });
   }
 
   _getAPI(name, ...args) {
