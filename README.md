@@ -8,9 +8,47 @@ This module provides some tools for making requests that are:
 
 It is designed to be ambivalent to the method of request. So `axios`, `fetch`, `Amplify.get` etc should all work, with slight configuration.
 
+### Basic usage
+
+After setup (below), you can use the module by defining an API function, which returns an object defining the `path` (endpoint object) of your request, the `offlineReponse` (a canned API response for when you run your app offline), and optional `onSuccess` and `onFailure` functions.
+
+```js
+const myApiFunction = (pathArgument, body) => ({
+  path: ({ method: 'PUT', path: `/my-path/${pathArgument}`, body }),
+  offlineResponse: () => ({ encouragement: 'You got it!' }),
+  onSuccess: (response, dispatch) => {
+    dispatch(actions.storeEncouragementInState(response.encouragement));
+  }
+})
+```
+
+Having defined your request function using the module (pulling in your API function defined above), you can now run the request like so:
+
+```js
+import { request } from 'utils/request';
+
+dispatch(request('myApiFunction', 'path-argument', { apiKey: 'some-value' }));
+```
+
+Unlike a regular `fetch` or other middleware, this configured `request`/API-function combo will handle several things for you:
+
+1. It will store the request, and success/failure timestamps in the Redux store, simplifying (built-in) request-once functionality and any additional polling or timestamp-related requesting.
+2. It will handle offline requests with a simple ENV variable switch. When properly configured, `request` will switch over to the "offline API", stubbing requests instead of hitting an API, enabling you to seamlessly switch to an offline development experience.
+3. It will promisify the request, allowing you to simply chain post-request behavior (in addition to defining global `onSuccess` and `onFailure` behavior in the API objects):
+
+```js
+dispatch(request('myApiFunction', 'path-argument', { apiKey: 'some-value' }))
+  .then(response => {
+    // Do something
+  })
+  .catch(error => {
+    // Handle error
+  });
+```
+
 ### Getting Started
 
-This module assumes you are using `redux` and `redux-thunk`.
+This module assumes you are using `redux` and `redux-thunk`, and it takes a little bit of set up.
 
 ###### Install the module
 
@@ -20,7 +58,7 @@ yarn add trackable-request-handler
 
 ###### Define an APIs object
 
-The module expects an APIs object where each key points to a function which takes request arguments and returns an object with 3 methods:
+The module requires an APIs object where each key points to a function which takes request arguments and returns an object with 2 required and 2 optional methods (as described/explained above):
 
 1. `path` (**required**) -- Returns the path information associated with the request.
 2. `offlineResponse` (**required**) -- Given a Redux `getState` arg, responds with how a successful response should look, given the args. (When offline, this stubs the request and returns the function results.)
@@ -62,6 +100,8 @@ export const store = combineReducers({
   // Etc
 });
 ```
+
+Inspect the [requestReducer](./src/requestReducer.js) file for guidance on how to roll out your own.
 
 ###### Configure the handler
 
@@ -146,7 +186,7 @@ import { req } from 'utils/request';
   }
 ```
 
-> Note that this tool allows for both `onSuccess` and `onFailure` to be defined on the API object, **and** for the dispatch to be treated as a basic promise, with `then` and `catch` functions, fed the `response` and `error`. You can use both, either, or neither.
+> Note that this tool allows for both `onSuccess` and `onFailure` to be defined on the API object (ie, run on all uses), **and** for the dispatch to be treated as a basic promise, with `then` and `catch` functions, fed the `response` and `error`. You can use both, either, or neither.
 
 ###### reqOnce
 
@@ -157,12 +197,12 @@ Similarly, you could use `reqOnce` to, for example, grab relevant data on page l
 
 The `RequestHandler` takes a number of configuration arguments, which all (other than the APIs object) have defaults:
 
-- `apis` (object)_- Above-described object. No default provided.
-- `requestFunction` (function) - Called to make the actual request. Defaults to `fetch`.
-- `offline` (bool) - Whether the app is "offline" and should reach for `offlineResponse` stubbed results, instead of making requests. Deafault: false.
-- `actions` (object) - Object defining Redux action functions to `recordRequest`, `recordSuccess` and `recordFailure`. The defaults correspond to the default reducer provided. Alternate actions can be provided to correspond to different request reducers.
-- `requestHistoryStateKey` (string) - The key under which the request history is stored in the Redux store (above, 'requests'). Default: 'requests'
-- `finders` (object) - Object defining functions which take two arguments, 1) the request history reducer, and 2) the request object (eg `{ method: 'PUT', path: '/users/1' }`) to determine the location of the tracked request in the request history reducer. Expecting `findRequest`, `findSuccess`, and `findFailure` to be defined. Defaults are provided which correspond to the default reducer.
+- `apis` (object) - Above-described object. **Required**.
+- `requestFunction` (function) - Called to make the actual request. **Default: `fetch`**.
+- `offline` (bool) - Whether the app is "offline" and should reach for `offlineResponse` stubbed results, instead of making requests. **Default: `false`**.
+- `actions` (object) - Object defining Redux action functions to `recordRequest`, `recordSuccess` and `recordFailure`. The defaults correspond to the default reducer provided. Alternate actions can be provided to correspond to different request reducers. **Optional**
+- `requestHistoryStateKey` (string) - The key under which the request history is stored in the Redux store (above, 'requests'). **Default: `'requests'`**
+- `finders` (object) - Object defining functions which take two arguments, 1) the request history reducer, and 2) the request object (eg `{ method: 'PUT', path: '/users/1' }`) to determine the location of the tracked request in the request history reducer. Expecting `findRequest`, `findSuccess`, and `findFailure` to be defined. Defaults are provided which correspond to the default reducer. **Optional**
 
 ### Multiple APIs
 
