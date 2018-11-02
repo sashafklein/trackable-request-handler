@@ -13,9 +13,9 @@ const record = type => (
 
 const recordRequest = record('REQUEST');
 
-const recordSuccess = record('REQUEST');
+const recordSuccess = record('SUCCESS');
 
-const recordFailure = record('REQUEST');
+const recordFailure = record('FAILURE');
 
 export default {
   recordRequest,
