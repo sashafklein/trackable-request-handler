@@ -14,7 +14,7 @@
 // - Any number (0 included) will make the request *offline*, and delay it by the specified
 //   number of milliseconds.
 // - Any non-numerical value will make requests *online*.
-export default const parseOfflineArg = arg => {
+const parseOfflineArg = arg => {
   if (value === 'true') {
     return 0;
   } else if (value === true) {
@@ -26,3 +26,5 @@ export default const parseOfflineArg = arg => {
     return false;
   }
 };
+
+export default parseOfflineArg;
