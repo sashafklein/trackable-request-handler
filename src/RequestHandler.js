@@ -15,10 +15,21 @@ const findDefault = type => (requestHistory, requestOptions) =>
  * @class      RequestHandler
  */
 class RequestHandler {
+  //*
+   * @param {[object]} apis                               Array of objects describing API responses. See README for details.
+   * @param {[function]}  [requestFunction=fetch]         Function called to make (online) requests. Passed path etc from relevant API object.
+   * @param {*} [offlineDelayTime=false]                  If a number, a string of a number, or the Boolean `true` (which translates here to `0`),
+   *                                                      the request will be made "offline", with the specified delay. Otherwise, the request will be
+   *                                                      made online (normally).
+   * @param {Object}  [actions=actionsDefault]            Object with `recordRequest`, `recordSuccess`, and `recordFailure` functions, called appropriately
+   *                                                      as part of the request lifecycle. Defaults to actions given by this package.
+   * @param {String}  [requestHistoryStateKey='requests'] The Redux state key under which the requests are stored/tracked. Defaults to `'requests'`.
+   * @param {Object}  [finders={}]                        Object of functions used to find previous request history in Redux store.
+   */
   constructor (
     apis,
     requestFunction = fetch,
-    offline = false,
+    offlineDelayTime = false,
     actions = actionsDefault,
     requestHistoryStateKey = 'requests',
     finders = {}
@@ -32,11 +43,29 @@ class RequestHandler {
 
     this.requestHistoryStateKey = requestHistoryStateKey;
     this.request = requestFunction;
-    this.offline = offline;
+    this.offline = this._parseOfflineValue(offlineDelayTime);
 
     this.req = this.req.bind(this);
     this.reqOnce = this.reqOnce.bind(this);
     this.finders = this._defineFinders(finders);
+  }
+
+  _isOffline() {
+    return typeof this.offline === 'number';
+  }
+
+  _parseOfflineValue(value) {
+    if (value === 'false') {
+      return false;
+    } else if (value === 'true') {
+      return 0;
+    } else if (typeof value === 'string') {
+      return Number(value);
+    } else if (value === true) {
+      return 0;
+    } else {
+      return value;
+    }
   }
 
   req(apiName, ...args) {
@@ -91,7 +120,7 @@ class RequestHandler {
     const pathObj = api.path();
     const record = this.record(pathObj);
 
-    const makeRequest = this.offline
+    const makeRequest = this._isOffline()
       ? () =>
         new Promise(resolve => {
           const offlineFunc = api.offlineResponse;
@@ -101,8 +130,11 @@ class RequestHandler {
             );
           }
 
-          const response = offlineFunc(getState);
-          resolve(response);
+          // If offline, delay by given delay time
+          setTimeout(() => {
+            const response = offlineFunc(getState);
+            resolve(response);
+          }, this.offline);
         })
       : this.request;
 
