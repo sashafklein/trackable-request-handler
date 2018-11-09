@@ -8,6 +8,8 @@ This module provides some tools for making requests that are:
 
 It is designed to be ambivalent to the method of request. So `axios`, `fetch`, `Amplify.get` etc should all work, with slight configuration.
 
+> Note: This package expects that your app incorporates both `redux` and the `redux-thunk` middleware. It will not work without them.
+
 ### Basic usage
 
 After setup (below), you can use the module by defining an API function, which returns an object defining the `path` (endpoint object) of your request, the `offlineReponse` (a canned API response for when you run your app offline), and optional `onSuccess` and `onFailure` functions.
@@ -112,13 +114,32 @@ Here's a simple example configuration, using `aws-amplify` as the underlying req
 > Note. The requestFunction you supply must have a basic fetch-like signature, taking a single `options` object argument, from which it constructs the request. And it must return the request Promise.
 
 ```js
-import RequestHandler from 'trackable-request-handler';
+import RequestHandler, { parseOfflineArg } from 'trackable-request-handler';
 import { API } from 'aws-amplify';
 
 import { apis } from './apis';
 
-// ENV variable which switches the requester to offline
+// A common pattern for determining whether app requests should be on/offline, based on
+// process.env. See below for more info.
 const { REACT_APP_OFFLINE } = process.env;
+
+// Converts offline argument (likely a string, from process.env) to a format interpretable by the handler.
+// The result determines both whether the requester should request on/offline **and**,
+// if offline, how long (in milliseconds) the "request" should delay before resolving.
+//
+// Because a common pattern is to draw this offline value from process.env, which is typically
+// an object with string values, where possible, the `parseOfflineArg` func converts values from strings.
+// Handlers accept only numbers, false, undefined, and null as arguments.
+// So this function converts:
+// - The boolean true or string 'true' to 0.
+// - Other strings to their number version (eg '5' to 5), or to false, if number conversion fails.
+// - any other value to false
+//
+// Post conversion, values will be handled like so:
+// - Any number (0 included) will make the request *offline*, and delay it by the specified
+//   number of milliseconds.
+// - Any non-numerical value will make requests *online*.
+const potentialOfflineDelay = parseOfflineArg(REACT_APP_OFFLINE);
 
 // Define a fetch-like request function
 async function awsRequest({
@@ -144,7 +165,7 @@ async function awsRequest({
 }
 
 // Generate a new handler using the request function
-const handler = new RequestHandler(APIs, awsRequest, REACT_APP_OFFLINE);
+const handler = new RequestHandler(APIs, awsRequest, potentialOfflineDelay);
 
 // Export the two handler functions, for use in components
 

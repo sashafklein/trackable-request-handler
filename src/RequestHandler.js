@@ -18,8 +18,7 @@ class RequestHandler {
    /**
    * @param {[object]} apis                               Array of objects describing API responses. See README for details.
    * @param {[function]}  [requestFunction=fetch]         Function called to make (online) requests. Passed path etc from relevant API object.
-   * @param {*} [offlineDelayTime=false]                  If a number, a string of a number, or the Boolean `true` (which translates here to `0`),
-   *                                                      the request will be made "offline", with the specified delay. Otherwise, the request will be
+   * @param {*} [offlineDelayTime=false]                  If a number, the request will be made "offline", with the specified delay. Otherwise, the request will be
    *                                                      made online (normally).
    * @param {Object}  [actions=actionsDefault]            Object with `recordRequest`, `recordSuccess`, and `recordFailure` functions, called appropriately
    *                                                      as part of the request lifecycle. Defaults to actions given by this package.
@@ -41,31 +40,17 @@ class RequestHandler {
       failure: () => actions.recordFailure(path.path, path.method)
     });
 
+    if (offlineDelayTime !== false && typeof offlineDelayTime !== 'number') {
+      console.error('BAD ARGUMENT during handler creation! `offlineDelayTime` must be a number or `false`, but was instead: ', offlineDelayTime);
+    }
+
     this.requestHistoryStateKey = requestHistoryStateKey;
     this.request = requestFunction;
-    this.offline = this._parseOfflineValue(offlineDelayTime);
+    this.offlineDelayTime = offlineDelayTime;
 
     this.req = this.req.bind(this);
     this.reqOnce = this.reqOnce.bind(this);
     this.finders = this._defineFinders(finders);
-  }
-
-  _isOffline() {
-    return typeof this.offline === 'number';
-  }
-
-  _parseOfflineValue(value) {
-    if (value === 'false') {
-      return false;
-    } else if (value === 'true') {
-      return 0;
-    } else if (typeof value === 'string') {
-      return Number(value);
-    } else if (value === true) {
-      return 0;
-    } else {
-      return value;
-    }
   }
 
   req(apiName, ...args) {
@@ -93,6 +78,10 @@ class RequestHandler {
   }
 
   // PRIVATE
+
+  _isOffline() {
+    return typeof this.offlineDelayTime === 'number';
+  }
 
   _generateTracker(requestHistory, finders = {}) {
     return requestOptions => {
@@ -134,7 +123,7 @@ class RequestHandler {
           setTimeout(() => {
             const response = offlineFunc(getState);
             resolve(response);
-          }, this.offline);
+          }, this.offlineDelayTime);
         })
       : this.request;
 
