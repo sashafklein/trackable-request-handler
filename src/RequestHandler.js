@@ -15,7 +15,7 @@ const findDefault = type => (requestHistory, requestOptions) =>
  * @class      RequestHandler
  */
 class RequestHandler {
-  //*
+   /**
    * @param {[object]} apis                               Array of objects describing API responses. See README for details.
    * @param {[function]}  [requestFunction=fetch]         Function called to make (online) requests. Passed path etc from relevant API object.
    * @param {*} [offlineDelayTime=false]                  If a number, a string of a number, or the Boolean `true` (which translates here to `0`),
