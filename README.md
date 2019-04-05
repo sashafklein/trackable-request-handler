@@ -16,7 +16,7 @@ After setup (below), you can use the module by defining an API function, which r
 
 ```js
 const myApiFunction = (pathArgument, body) => ({
-  path: ({ method: 'PUT', path: `/my-path/${pathArgument}`, body }),
+  path: () => ({ method: 'PUT', path: `/my-path/${pathArgument}`, body }),
   offlineResponse: () => ({ encouragement: 'You got it!' }),
   onSuccess: (response, dispatch) => {
     dispatch(actions.storeEncouragementInState(response.encouragement));
